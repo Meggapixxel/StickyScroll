@@ -35,6 +35,7 @@ extension ViewController: UITableViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let velocity = scrollView.panGestureRecognizer.velocity(in: scrollView)
+        
         if velocity.y == 0 {
             if scrollView.contentInset.top == LocalConstans.maxConst && scrollView.contentOffset.y <= 0 {
                 // decelerating ↓
@@ -49,7 +50,7 @@ extension ViewController: UITableViewDelegate {
                 // decelerating ↑
                 if tableViewTopConstraint.constant - scrollView.contentOffset.y < LocalConstans.minConst {
                     scrollView.contentOffset.y = scrollView.contentOffset.y - tableViewTopConstraint.constant
-                    tableViewTopConstraint.constant = LocalConstans.minConst
+                    tableViewTopConstraint.constant = 0
                     scrollView.contentInset.top = LocalConstans.maxConst
                 } else {
                     tableViewTopConstraint.constant -= scrollView.contentOffset.y
@@ -72,7 +73,7 @@ extension ViewController: UITableViewDelegate {
                 guard scrollView.contentOffset.y > 0 && tableViewTopConstraint.constant != LocalConstans.minConst else { return }
                 if tableViewTopConstraint.constant - scrollView.contentOffset.y < LocalConstans.minConst {
                     scrollView.contentOffset.y = scrollView.contentOffset.y - tableViewTopConstraint.constant
-                    tableViewTopConstraint.constant = LocalConstans.minConst
+                    tableViewTopConstraint.constant = 0
                     scrollView.contentInset.top = LocalConstans.maxConst
                 } else {
                     tableViewTopConstraint.constant -= scrollView.contentOffset.y
