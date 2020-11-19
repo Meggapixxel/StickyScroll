@@ -34,6 +34,12 @@ private extension ViewController {
 extension ViewController: UITableViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let scrollViewDelegate = scrollView.delegate
+        scrollView.delegate = nil
+        defer {
+            scrollView.delegate = scrollViewDelegate
+        }
+        
         let velocity = scrollView.panGestureRecognizer.velocity(in: scrollView)
         
         if velocity.y == 0 {
