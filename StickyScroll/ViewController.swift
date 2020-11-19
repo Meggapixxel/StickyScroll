@@ -14,7 +14,7 @@ final class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.bounces = false
+        tableView.bounces = true
         tableViewTopConstraint.constant = LocalConstans.maxConst
     }
     
@@ -34,35 +34,26 @@ private extension ViewController {
 extension ViewController: UITableViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let velocity = scrollView.panGestureRecognizer.velocity(in: scrollView)
+        let scrollViewDelegate = scrollView.delegate
+        scrollView.delegate = nil
+        defer {
+            scrollView.delegate = scrollViewDelegate
+        }
         
+        let velocity = scrollView.panGestureRecognizer.velocity(in: scrollView)
         if velocity.y == 0 {
-            if scrollView.contentInset.top == LocalConstans.maxConst && scrollView.contentOffset.y <= 0 {
-                // decelerating ↓
-                if tableViewTopConstraint.constant - scrollView.contentOffset.y > LocalConstans.maxConst {
-                    scrollView.contentInset.top = 0
-                    tableViewTopConstraint.constant = LocalConstans.maxConst
-                } else {
-                    tableViewTopConstraint.constant -= scrollView.contentOffset.y
-                    scrollView.contentOffset.y = 0
-                }
-            } else if tableViewTopConstraint.constant != LocalConstans.minConst {
-                // decelerating ↑
-                if tableViewTopConstraint.constant - scrollView.contentOffset.y < LocalConstans.minConst {
-                    scrollView.contentOffset.y = scrollView.contentOffset.y - tableViewTopConstraint.constant
-                    tableViewTopConstraint.constant = 0
-                    scrollView.contentInset.top = LocalConstans.maxConst
-                } else {
-                    tableViewTopConstraint.constant -= scrollView.contentOffset.y
-                    scrollView.contentOffset.y = 0
-                }
+            let translation = scrollView.panGestureRecognizer.translation(in: scrollView.superview)
+            if translation.y > 0 && scrollView.contentOffset.y > 0 {
+                print("decelarating ↓", scrollView.contentOffset.y)
+            } else {
+                print("decelarating ↑", scrollView.contentOffset.y)
             }
         } else {
             if velocity.y > 0 {
                 // dragging ↓
                 guard scrollView.contentOffset.y < 0 && tableViewTopConstraint.constant != LocalConstans.maxConst else { return }
                 if tableViewTopConstraint.constant - scrollView.contentOffset.y > LocalConstans.maxConst {
-                    scrollView.contentOffset.y = (LocalConstans.maxConst - tableViewTopConstraint.constant) - scrollView.contentOffset.y 
+                    scrollView.contentOffset.y = (LocalConstans.maxConst - tableViewTopConstraint.constant) - scrollView.contentOffset.y
                     tableViewTopConstraint.constant = LocalConstans.maxConst
                 } else {
                     tableViewTopConstraint.constant -= scrollView.contentOffset.y
@@ -73,8 +64,7 @@ extension ViewController: UITableViewDelegate {
                 guard scrollView.contentOffset.y > 0 && tableViewTopConstraint.constant != LocalConstans.minConst else { return }
                 if tableViewTopConstraint.constant - scrollView.contentOffset.y < LocalConstans.minConst {
                     scrollView.contentOffset.y = scrollView.contentOffset.y - tableViewTopConstraint.constant
-                    tableViewTopConstraint.constant = 0
-                    scrollView.contentInset.top = LocalConstans.maxConst
+                    tableViewTopConstraint.constant = LocalConstans.minConst
                 } else {
                     tableViewTopConstraint.constant -= scrollView.contentOffset.y
                     scrollView.contentOffset.y = 0
@@ -84,27 +74,43 @@ extension ViewController: UITableViewDelegate {
     }
     
     func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        if scrollView.contentOffset.y == targetContentOffset.pointee.y && targetContentOffset.pointee.y <= LocalConstans.maxConst  {
-            if tableViewTopConstraint.constant < LocalConstans.maxConst / 2 {
-                tableViewTopConstraint.constant = LocalConstans.minConst
-                scrollView.contentInset.top = LocalConstans.maxConst
+        print(velocity.y, targetContentOffset.pointee.y)
+        
+        if velocity.y > 0 {
+            guard targetContentOffset.pointee.y > 0 && tableViewTopConstraint.constant != LocalConstans.minConst else { return }
+            tableViewTopConstraint.constant = LocalConstans.minConst
+            UIView.animate(withDuration: 0.3) {
+                self.view.layoutIfNeeded()
+            }
+        } else if velocity.y < 0 {
+            guard targetContentOffset.pointee.y == 0 else { return }
+            if tableViewTopConstraint.constant == LocalConstans.maxConst {
+                
             } else {
+                if tableViewTopConstraint.constant > LocalConstans.maxConst / 2 {
+                    tableViewTopConstraint.constant = LocalConstans.maxConst
+                } else {
+                    tableViewTopConstraint.constant = LocalConstans.minConst
+                }
+                UIView.animate(withDuration: 0.3) {
+                    self.view.layoutIfNeeded()
+                }
+            }
+        } else {
+            if tableViewTopConstraint.constant > LocalConstans.maxConst / 2 {
                 tableViewTopConstraint.constant = LocalConstans.maxConst
-                scrollView.contentInset.top = 0
+            } else {
+                tableViewTopConstraint.constant = LocalConstans.minConst
             }
             UIView.animate(withDuration: 0.3) {
                 self.view.layoutIfNeeded()
             }
-        } else if scrollView.contentOffset.y < 0 && targetContentOffset.pointee.y == 0 {
-            guard tableViewTopConstraint.constant != LocalConstans.maxConst else { return }
-            tableViewTopConstraint.constant = LocalConstans.maxConst
-            UIView.animate(withDuration: 0.3) {
-                self.view.layoutIfNeeded()
-            }
-        } else if scrollView.contentOffset.y > 0 && targetContentOffset.pointee.y < 0 && scrollView.contentInset.top == LocalConstans.maxConst && targetContentOffset.pointee.y != -scrollView.contentInset.top {
-            targetContentOffset.pointee.y = -scrollView.contentInset.top
         }
     }
+    
+//    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+//
+//    }
     
 }
 
